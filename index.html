@@ -1,54 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>خمن اللاعب</title>
-  <link rel="stylesheet" href="styles/base.css">
-  <link rel="stylesheet" href="styles/pages.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A1628">
+<title>Player IQ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <main class="auth-screen">
-    <div class="auth-card">
-      <h1 class="auth-logo">خمن <span>اللاعب</span></h1>
-
-      <div class="auth-tabs" role="tablist">
-        <button type="button" class="auth-tab is-active" data-tab="login" role="tab">تسجيل الدخول</button>
-        <button type="button" class="auth-tab" data-tab="signup" role="tab">حساب جديد</button>
-      </div>
-
-      <form id="login-form" class="auth-form">
-        <label class="field">
-          <span>البريد الإلكتروني</span>
-          <input type="email" name="email" required autocomplete="email">
-        </label>
-        <label class="field">
-          <span>كلمة المرور</span>
-          <input type="password" name="password" required autocomplete="current-password">
-        </label>
-        <p class="auth-error" id="login-error" hidden></p>
-        <button type="submit" class="btn-primary auth-submit">دخول</button>
-      </form>
-
-      <form id="signup-form" class="auth-form" hidden>
-        <label class="field">
-          <span>اسم المستخدم</span>
-          <input type="text" name="username" required minlength="3" maxlength="20" autocomplete="username">
-        </label>
-        <label class="field">
-          <span>البريد الإلكتروني</span>
-          <input type="email" name="email" required autocomplete="email">
-        </label>
-        <label class="field">
-          <span>كلمة المرور</span>
-          <input type="password" name="password" required minlength="6" autocomplete="new-password">
-        </label>
-        <p class="auth-error" id="signup-error" hidden></p>
-        <button type="submit" class="btn-primary auth-submit">إنشاء الحساب</button>
-      </form>
-    </div>
-  </main>
-
-  <script type="module" src="src/pages/auth.page.js"></script>
+<div id="app"><div class="auth"><div class="logo"><span>PLAYER</span><b>IQ</b></div></div></div>
+<noscript>يلزم تفعيل جافاسكربت</noscript>
+<script type="module" src="app.js"></script>
 </body>
 </html>

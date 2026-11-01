@@ -1,0 +1,11 @@
+{
+  "appId": "studio.spider.playeriq",
+  "appName": "Player IQ",
+  "webDir": "dist",
+  "backgroundColor": "#0A1628",
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_icon", "iconColor": "#F2B705" },
+    "StatusBar": { "style": "DARK", "backgroundColor": "#0A1628" }
+  }
+}
