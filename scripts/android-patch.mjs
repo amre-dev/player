@@ -7,6 +7,10 @@ const mf = 'android/app/src/main/AndroidManifest.xml';
 if (existsSync(mf)) {
   let x = readFileSync(mf, 'utf8');
   if (!x.includes('android:supportsRtl')) x = x.replace('<application', '<application android:supportsRtl="true"');
+  if (!x.includes('studio.spider.playeriq')) {
+    const filter = '<intent-filter><action android:name="android.intent.action.VIEW"/><category android:name="android.intent.category.DEFAULT"/><category android:name="android.intent.category.BROWSABLE"/><data android:scheme="studio.spider.playeriq" android:host="auth"/></intent-filter>';
+    x = x.replace('</activity>', filter + '</activity>');
+  }
   writeFileSync(mf, x);
 }
 console.log('android patched');

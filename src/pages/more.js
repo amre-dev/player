@@ -42,6 +42,8 @@ export async function morePage(root) {
       h('div', { class: 'row between' }, h('span', null, 'مباريات'), h('b', null, stats.matches)),
       h('div', { class: 'row between' }, h('span', null, 'مستخدمون'), h('b', null, stats.users)),
       h('small', { class: 'muted' }, 'Spider Studio')),
+    h('section', { class: 'card stack' }, h('h3', null, 'الحساب'), h('div', { class: 'muted small', dir: 'ltr' }, store.session?.user?.email || ''),
+      h('a', { class: 'btn ghost block', href: '#/reset' }, 'تغيير كلمة المرور')),
     h('a', { class: 'btn ghost block', href: `https://wa.me/${SUPPORT_WHATSAPP}`, target: '_blank', rel: 'noopener' }, 'تواصل مع الدعم'),
     h('button', { class: 'btn danger block', onClick: async () => { await signOut(); store.me = null; location.hash = '#/auth'; } }, icon('logout', 18), ' تسجيل الخروج')),
     navBar('#/more'));

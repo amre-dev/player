@@ -1,4 +1,4 @@
-import { sb, subscribe } from './api/client.js';
+import { sb, subscribe, consumeAuthUrl } from './api/client.js';
 import { store, refreshMe } from './store.js';
 import { h, toast } from './ui.js';
 import { authPage } from './pages/auth.js';
@@ -7,16 +7,17 @@ import { friendsPage } from './pages/friends.js';
 import { shopPage } from './pages/shop.js';
 import { profilePage } from './pages/profile.js';
 import { morePage } from './pages/more.js';
+import { resetPage } from './pages/reset.js';
 import { duelPage } from './pages/duel.js';
 import { auctionPage } from './pages/auction.js';
-import { initNative, notifyNative } from './native.js';
+import { initNative, notifyNative, onAppUrl } from './native.js';
 
 const root = document.getElementById('app');
 const routes = {
   home: homePage, friends: friendsPage, shop: shopPage, profile: profilePage, more: morePage,
-  duel: duelPage, auction: auctionPage,
+  duel: duelPage, auction: auctionPage, reset: resetPage,
 };
-let cleanup = null, notesUnsub = null, token = 0;
+let cleanup = null, notesUnsub = null, token = 0, pendingNotice = null;
 
 async function render() {
   const my = ++token;
@@ -25,7 +26,7 @@ async function render() {
   try {
     if (!store.me && !(await refreshMe())) {
       if (notesUnsub) { notesUnsub(); notesUnsub = null; }
-      if (my === token) authPage(root);
+      if (my === token) { const r = authPage(root, { notice: pendingNotice }); pendingNotice = null; if (typeof r === 'function') cleanup = r; }
       return;
     }
     if (name === 'auth') { location.hash = '#/home'; return; }
@@ -50,8 +51,17 @@ function startNotifications() {
   });
 }
 
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT') { store.me = null; if (notesUnsub) { notesUnsub(); notesUnsub = null; } } });
+sb.auth.onAuthStateChange((ev) => { if (ev === 'PASSWORD_RECOVERY') { store.recovering = true; location.hash = '#/reset'; } if (ev === 'SIGNED_OUT') { store.me = null; if (notesUnsub) { notesUnsub(); notesUnsub = null; } } });
+async function handleAuthUrl(url) {
+  try {
+    const r = await consumeAuthUrl(url);
+    if (r === 'confirmed-elsewhere') pendingNotice = 'تم تأكيد بريدك. سجّل دخولك الآن.';
+    if (r === 'session' && !store.recovering) { toast('تم تأكيد بريدك', 'ok'); location.hash = '#/home'; }
+  } catch (e) { pendingNotice = e.message; }
+  if (/[?&](code|error_description)=/.test(location.search) || /^#(error|access_token)/.test(location.hash)) history.replaceState(null, '', location.pathname + (store.recovering ? '#/reset' : '#/home'));
+}
+onAppUrl(async (url) => { store.me = null; await handleAuthUrl(url); render(); });
 window.addEventListener('hashchange', render);
 initNative();
-render();
+handleAuthUrl(location.href).finally(render);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !window.Capacitor?.isNativePlatform?.()) navigator.serviceWorker.register('./sw.js').catch(() => {});
