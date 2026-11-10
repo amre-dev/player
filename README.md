@@ -19,3 +19,9 @@
 ## بيانات اللعبة
 اللاعبون والمتجر فارغان: أضف صفوف في جدول `players` (name_ar, rating, line = goalkeeper/first/second, club, photo_url)
 و `shop_items` (type = frame/title, name_ar, price, image_url). المزاد يلزمه 3+ لاعبين على الأقل لكل خط (يفضّل 15+).
+
+## نسخة الويب بدون بناء
+مجلد `web/` يشغّل اللعبة مباشرة كملفات HTML/CSS/JS (مكتبة Supabase تُحمَّل من CDN). افتحه عبر أي استضافة ملفات ثابتة،
+مثلا GitHub Pages: `https://amre-dev.github.io/player/web/`. لا تفتحه بنقر مزدوج (file://) لأن وحدات JS تحتاج خادما.
+## إضافة منتجات للمتجر
+أدخل صفا في جدول `shop_items`: type (`frame` أو `title`)، name_ar، price، image_url، sort_order، active=true.
