@@ -105,58 +105,98 @@ const HAIRC=['#1a1412','#3b2416','#6b4423','#a9702f','#d9b25a','#c4472b','#8d8d9
 const HAIR={short:'قصير',buzz:'حليق خفيف',side:'جانبي',afro:'أفرو',curls:'مجعّد',long:'طويل',bun:'ربطة',mohawk:'موهوك',bald:'أصلع'};
 const JP={plain:'سادة',stripes:'خطوط طولية',hoops:'خطوط عرضية',sash:'شريط قطري',halves:'نصفين',chevron:'شيفرون'};
 const COLLAR={round:'دائري',v:'V',polo:'بولو'};const BUILD={slim:'نحيف',medium:'متوسط',broad:'عريض'};const HEAD={round:'دائري',oval:'بيضاوي',square:'مربّع'};const BEARD={none:'بدون',stubble:'خفيفة',full:'كاملة'};
-function bodyPath(c,hw){const L=256-hw,R=256+hw;c.beginPath();c.moveTo(L,AS);c.lineTo(L,372);c.bezierCurveTo(L,326,L+30,304,178,292);c.quadraticCurveTo(256,272,334,292);c.bezierCurveTo(R-30,304,R,326,R,372);c.lineTo(R,AS);c.closePath()}
-function headPath(c,o,pad=0){const cx=256,cy=170;if(o.head==='square'){rr(c,cx-62-pad,cy-70-pad,124+2*pad,142+2*pad,44+pad)}else{const rx=o.head==='oval'?57:64,ry=o.head==='oval'?78:70;c.beginPath();c.ellipse(cx,cy,rx+pad,ry+pad,0,0,7)}}
+const mix=(a,b,t)=>{const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16),f=sh=>Math.round(((A>>sh)&255)*(1-t)+((B>>sh)&255)*t);return '#'+((1<<24)+(f(16)<<16)+(f(8)<<8)+f(0)).toString(16).slice(1)};
+const FACE={
+ round:'M256,92 C322,92 332,150 330,192 C328,240 296,270 256,270 C216,270 184,240 182,192 C180,150 190,92 256,92Z',
+ oval:'M256,84 C314,84 322,146 320,196 C318,248 290,278 256,278 C222,278 194,248 192,196 C190,146 198,84 256,84Z',
+ square:'M256,92 C316,92 334,112 334,160 L334,208 C334,252 306,270 256,270 C206,270 178,252 178,208 L178,160 C178,112 196,92 256,92Z'};
+const facePath=(c,o)=>c.fill?0:0;
+function bodyPath(c,hw){const L=256-hw,R=256+hw;const p=new Path2D();p.moveTo(L,512);p.lineTo(L,400);p.bezierCurveTo(L,360,L+22,338,L+74,328);p.bezierCurveTo(L+110,321,206,318,212,308);p.lineTo(300,308);p.bezierCurveTo(306,318,R-110,321,R-74,328);p.bezierCurveTo(R-22,338,R,360,R,400);p.lineTo(R,512);p.closePath();return p}
 function drawAvatar(c,o,s){
- c.save();c.scale(s,s);const hw={slim:168,medium:200,broad:232}[o.build],L=256-hw,R=256+hw,skin=o.skin,sd=shade(skin,-.22),hair=o.hairc,sec=o.sec;
- // شعر خلفي
- c.fillStyle=hair;
- if(o.hair==='afro'){c.beginPath();c.arc(256,150,98,0,7);c.fill()}
- if(o.hair==='long'){rr(c,256-84,100,168,230,60);c.fill()}
- // رقبة
- c.fillStyle=sd;c.fillRect(256-27,200,54,100);
- // جسم
- bodyPath(c,hw);c.fillStyle=o.pri;c.fill();c.save();bodyPath(c,hw);c.clip();
- const J=o.jp;
- if(J==='stripes'){for(let x=L;x<R;x+=64){c.fillStyle=sec;c.fillRect(x,260,32,260)}}
- if(J==='hoops'){for(let y=300;y<AS;y+=60){c.fillStyle=sec;c.fillRect(L,y,hw*2,28)}}
- if(J==='sash'){c.fillStyle=sec;c.beginPath();c.moveTo(L-10,300);c.lineTo(L+70,296);c.lineTo(R+10,AS);c.lineTo(R-70,AS);c.closePath();c.fill()}
- if(J==='halves'){c.fillStyle=sec;c.fillRect(256,260,hw+10,260)}
- if(J==='chevron'){c.fillStyle=sec;for(let k=0;k<3;k++){const y=340+k*52;c.beginPath();c.moveTo(L,y);c.lineTo(256,y+60);c.lineTo(R,y);c.lineTo(R,y+22);c.lineTo(256,y+82);c.lineTo(L,y+22);c.closePath();c.fill()}}
- // أكمام وأذرع
- c.fillStyle=sec;c.fillRect(L,378,60,16);c.fillRect(R-60,378,60,16);
- c.fillStyle=skin;c.fillRect(L,394,60,140);c.fillRect(R-60,394,60,140);
- c.strokeStyle='rgba(0,0,0,.28)';c.lineWidth=3;c.beginPath();c.moveTo(L+60,330);c.lineTo(L+60,AS);c.moveTo(R-60,330);c.lineTo(R-60,AS);c.stroke();
- let g=c.createLinearGradient(L,0,R,0);g.addColorStop(0,'rgba(0,0,0,.3)');g.addColorStop(.35,'rgba(0,0,0,0)');g.addColorStop(.65,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');c.fillStyle=g;c.fillRect(L,260,hw*2,260);
+ c.save();c.scale(s,s);c.lineJoin='round';c.lineCap='round';
+ const hw={slim:166,medium:188,broad:212}[o.build],L=256-hw,R=256+hw,skin=o.skin,sd=shade(skin,-.2),sdd=shade(skin,-.36),hair=o.hairc,hl=shade(hair,.32),sec=o.sec,pri=o.pri;
+ const ol=shade(pri,-.62);const face=new Path2D(FACE[o.head]);
+ const clipFace=(fn,grow=1)=>{c.save();const m=c.getTransform();c.translate(256,196);c.scale(grow,grow);c.translate(-256,-196);c.clip(face);c.setTransform(m);fn();c.restore()};
+ const HT=()=>{c.translate(256,262);c.scale(1.1,1.1);c.translate(-256,-262)};
+ /* ---- شعر خلفي ---- */
+ c.save();HT();
+ if(o.hair==='afro'){let g=c.createRadialGradient(240,120,10,256,160,120);g.addColorStop(0,shade(hair,.12));g.addColorStop(1,shade(hair,-.25));c.fillStyle=g;c.beginPath();c.ellipse(256,150,112,104,0,0,7);c.fill()}
+ if(o.hair==='long'){let g=c.createLinearGradient(0,90,0,360);g.addColorStop(0,hair);g.addColorStop(1,shade(hair,-.3));c.fillStyle=g;c.beginPath();c.moveTo(176,170);c.bezierCurveTo(166,90,200,76,256,76);c.bezierCurveTo(312,76,346,90,336,170);c.bezierCurveTo(344,250,342,310,326,350);c.lineTo(186,350);c.bezierCurveTo(170,310,168,250,176,170);c.fill()}
  c.restore();
- // ياقة
- c.lineJoin='round';
- if(o.collar==='round'){c.fillStyle=sd;c.beginPath();c.ellipse(256,292,40,22,0,0,7);c.fill();c.strokeStyle=sec;c.lineWidth=9;c.beginPath();c.ellipse(256,291,44,26,0,0,7);c.stroke()}
- if(o.collar==='v'){c.fillStyle=sd;c.beginPath();c.moveTo(210,282);c.lineTo(302,282);c.lineTo(256,340);c.closePath();c.fill();c.strokeStyle=sec;c.lineWidth=8;c.stroke()}
- if(o.collar==='polo'){c.fillStyle=sd;c.beginPath();c.ellipse(256,292,38,20,0,0,7);c.fill();c.fillStyle=sec;[[-1],[1]].forEach(([d])=>{c.beginPath();c.moveTo(256+d*10,286);c.lineTo(256+d*52,284);c.lineTo(256+d*26,326);c.closePath();c.fill()})}
- if(o.num){c.font='900 64px Tajawal,Impact,sans-serif';c.textAlign='center';c.fillStyle=sec;c.globalAlpha=.92;c.fillText(String(o.num).slice(0,2),256,452);c.globalAlpha=1}
- // رأس
- headPath(c,o);g=c.createRadialGradient(236,140,10,256,170,100);g.addColorStop(0,shade(skin,.12));g.addColorStop(1,skin);c.fillStyle=g;c.fill();
- c.fillStyle=sd;[-1,1].forEach(d=>{const rx=o.head==='oval'?57:64;c.beginPath();c.ellipse(256+d*(rx+1),182,9,16,0,0,7);c.fill()});
- // لحية
- c.save();headPath(c,o);c.clip();
- if(o.beard==='stubble'){c.fillStyle=rgba(hair,.32);c.fillRect(150,176,220,140)}
- if(o.beard==='full'){c.fillStyle=hair;c.beginPath();c.moveTo(186,176);c.quadraticCurveTo(190,262,256,262);c.quadraticCurveTo(322,262,326,176);c.quadraticCurveTo(300,208,256,206);c.quadraticCurveTo(212,208,186,176);c.fill()}
- if(o.band){c.fillStyle=o.bandc;c.fillRect(150,118,220,20);c.fillStyle='rgba(255,255,255,.25)';c.fillRect(150,121,220,3)}
+ /* ---- جسم ---- */
+ const body=bodyPath(c,hw);
+ c.save();c.clip(body);
+ let g=c.createLinearGradient(0,310,0,512);g.addColorStop(0,shade(pri,.1));g.addColorStop(1,shade(pri,-.14));c.fillStyle=g;c.fillRect(0,300,512,220);
+ const J=o.jp;c.fillStyle=sec;
+ if(J==='stripes'){for(let x=L-10;x<R+10;x+=58){c.fillRect(x,300,29,220)}}
+ if(J==='hoops'){for(let y=336;y<520;y+=58){c.fillRect(L,y,hw*2,28)}}
+ if(J==='sash'){c.beginPath();c.moveTo(L-20,330);c.lineTo(L+80,318);c.lineTo(R+20,520);c.lineTo(R-90,520);c.closePath();c.fill()}
+ if(J==='halves'){c.fillRect(256,300,hw+10,220)}
+ if(J==='chevron'){for(let k=0;k<3;k++){const y=352+k*50;c.beginPath();c.moveTo(L,y);c.lineTo(256,y+58);c.lineTo(R,y);c.lineTo(R,y+22);c.lineTo(256,y+80);c.lineTo(L,y+22);c.closePath();c.fill()}}
+ // طيّات القماش
+ c.strokeStyle='rgba(0,0,0,.13)';c.lineWidth=4;[[212,372,200,440],[300,380,314,452],[256,430,252,500]].forEach(([x1,y1,x2,y2])=>{c.beginPath();c.moveTo(x1,y1);c.quadraticCurveTo((x1+x2)/2+8,(y1+y2)/2,x2,y2);c.stroke()});
+ c.strokeStyle='rgba(255,255,255,.1)';c.lineWidth=3;[[230,360,226,430],[284,366,292,436]].forEach(([x1,y1,x2,y2])=>{c.beginPath();c.moveTo(x1,y1);c.quadraticCurveTo(x1-6,(y1+y2)/2,x2,y2);c.stroke()});
+ // الأكمام: حد الكم والكتف
+ c.fillStyle=sec;[[L,L+62],[R-62,R]].forEach(([x0,x1])=>{c.beginPath();c.moveTo(x0,430);c.quadraticCurveTo((x0+x1)/2,442,x1,430);c.lineTo(x1,446);c.quadraticCurveTo((x0+x1)/2,458,x0,446);c.closePath();c.fill()});
+ // أذرع (جلد) تحت الكم
+ [[L,L+62],[R-62,R]].forEach(([x0,x1],i)=>{let ag=c.createLinearGradient(x0,0,x1,0);ag.addColorStop(i?1:0,sdd);ag.addColorStop(i?0:1,skin);c.fillStyle=ag;c.beginPath();c.moveTo(x0,446);c.quadraticCurveTo((x0+x1)/2,458,x1,446);c.lineTo(x1-4,520);c.lineTo(x0+4,520);c.closePath();c.fill()});
+ // ظل الإبط وفصل الذراع
+ [[L+62,1],[R-62,-1]].forEach(([x,d])=>{let ag=c.createLinearGradient(x,0,x+d*26,0);ag.addColorStop(0,'rgba(0,0,0,.34)');ag.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=ag;c.fillRect(Math.min(x,x+d*26),372,26,150);c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=3;c.beginPath();c.moveTo(x-d*4,350);c.quadraticCurveTo(x+d*6,420,x-d*2,520);c.stroke()});
+ // إضاءة عامة: حواف أغمق + لمعة كتف
+ g=c.createLinearGradient(L,0,R,0);g.addColorStop(0,'rgba(0,0,0,.28)');g.addColorStop(.22,'rgba(0,0,0,0)');g.addColorStop(.7,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.34)');c.fillStyle=g;c.fillRect(L,300,hw*2,220);
+ g=c.createRadialGradient(200,340,4,200,340,90);g.addColorStop(0,'rgba(255,255,255,.2)');g.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(L,300,hw,120);
  c.restore();
- // شعر أمامي
- c.fillStyle=hair;
- const cap=(top=-0.42)=>{c.save();headPath(c,o,6);c.clip();c.beginPath();c.moveTo(170,90);c.lineTo(342,90);c.lineTo(342,160);c.quadraticCurveTo(326,170+70*top,256,170+70*top);c.quadraticCurveTo(186,170+70*top,170,160);c.closePath();c.fill();c.restore()};
- if(['short','side','afro','curls','long','bun'].includes(o.hair))cap(o.hair==='afro'?-.7:-.42);
- if(o.hair==='buzz'){c.globalAlpha=.55;cap(-.5);c.globalAlpha=1}
- if(o.hair==='side'){c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=3;c.beginPath();c.moveTo(232,102);c.quadraticCurveTo(250,124,246,136);c.stroke()}
- if(o.hair==='curls'){for(let i=0;i<9;i++){const a=Math.PI*(1.08+i*.105);c.beginPath();c.arc(256+Math.cos(a)*68,158+Math.sin(a)*74,19,0,7);c.fill()}}
- if(o.hair==='bun'){c.beginPath();c.arc(256,84,28,0,7);c.fill()}
- if(o.hair==='mohawk'){rr(c,238,66,36,92,16);c.fill()}
- if(o.band&&o.hair!=='bald'){/* الشريط فوق الشعر */c.save();headPath(c,o,3);c.clip();c.fillStyle=o.bandc;c.fillRect(150,118,220,20);c.restore()}
- // ظل تحت الذقن
- c.save();bodyPath(c,hw);c.clip();g=c.createRadialGradient(256,296,10,256,296,80);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(150,230,220,120);c.restore();
- c.restore()}
+ c.strokeStyle=rgba(ol,.7);c.lineWidth=3;c.stroke(body);
+ /* ---- رقبة ---- */
+ g=c.createLinearGradient(224,0,288,0);g.addColorStop(0,sd);g.addColorStop(.5,skin);g.addColorStop(1,sd);
+ c.fillStyle=g;c.beginPath();c.moveTo(226,236);c.lineTo(286,236);c.bezierCurveTo(288,276,292,300,302,318);c.lineTo(210,318);c.bezierCurveTo(220,300,224,276,226,236);c.fill();
+ /* ---- ياقة ---- */
+ const trim=sec;
+ if(o.collar==='round'){c.fillStyle=shade(pri,-.5);c.beginPath();c.ellipse(256,314,50,24,0,Math.PI,0);c.fill();   // داخل الياقة الخلفي
+  c.fillStyle=g;c.beginPath();c.moveTo(232,290);c.lineTo(280,290);c.lineTo(284,316);c.lineTo(228,316);c.fill();
+  c.strokeStyle=trim;c.lineWidth=11;c.beginPath();c.ellipse(256,314,50,25,0,0,Math.PI);c.stroke();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=2;c.beginPath();c.ellipse(256,321,50,25,0,0.1,Math.PI-.1);c.stroke()}
+ if(o.collar==='v'){c.fillStyle=g;c.beginPath();c.moveTo(210,308);c.lineTo(302,308);c.lineTo(256,372);c.closePath();c.fill();c.strokeStyle=trim;c.lineWidth=10;c.beginPath();c.moveTo(208,306);c.lineTo(256,374);c.lineTo(304,306);c.stroke();
+  c.fillStyle='rgba(0,0,0,.18)';c.beginPath();c.moveTo(210,308);c.lineTo(256,372);c.lineTo(256,330);c.closePath();c.fill()}
+ if(o.collar==='polo'){c.fillStyle=shade(pri,-.5);c.beginPath();c.ellipse(256,312,48,22,0,Math.PI,0);c.fill();c.fillStyle=g;c.beginPath();c.moveTo(232,290);c.lineTo(280,290);c.lineTo(284,314);c.lineTo(228,314);c.fill();
+  c.fillStyle=trim;[-1,1].forEach(d=>{c.beginPath();c.moveTo(256+d*8,306);c.lineTo(256+d*56,296);c.lineTo(256+d*50,326);c.lineTo(256+d*10,330);c.closePath();c.fill();c.strokeStyle='rgba(0,0,0,.25)';c.lineWidth=2;c.stroke()});
+  c.fillStyle='rgba(0,0,0,.25)';c.beginPath();c.ellipse(256,330,3,3,0,0,7);c.fill();c.beginPath();c.ellipse(256,344,3,3,0,0,7);c.fill()}
+ // ظل الرأس على الرقبة
+ c.save();c.clip(face);c.restore();
+ g=c.createRadialGradient(256,268,6,256,284,54);g.addColorStop(0,'rgba(0,0,0,.42)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(200,250,112,80);
+ if(o.num){c.font='900 62px Tajawal,Impact,sans-serif';c.textAlign='center';c.lineWidth=7;c.strokeStyle='rgba(0,0,0,.35)';c.strokeText(String(o.num).slice(0,2),256,462);c.fillStyle=sec;c.fillText(String(o.num).slice(0,2),256,462)}
+ c.save();HT();
+ /* ---- آذان ---- */
+ [-1,1].forEach(d=>{const x=256+d*(o.head==='oval'?66:o.head==='square'?80:74);c.fillStyle=shade(skin,-.08);c.beginPath();c.ellipse(x,194,13,22,d*.12,0,7);c.fill();c.fillStyle=sd;c.beginPath();c.ellipse(x-d*1,196,6,13,d*.12,0,7);c.fill();c.strokeStyle=rgba(sdd,.6);c.lineWidth=2;c.beginPath();c.ellipse(x,194,13,22,d*.12,0,7);c.stroke()});
+ /* ---- الوجه (حجم وإضاءة بدون ملامح) ---- */
+ g=c.createRadialGradient(232,150,10,256,190,130);g.addColorStop(0,shade(skin,.16));g.addColorStop(.55,skin);g.addColorStop(1,sd);c.fillStyle=g;c.fill(face);
+ clipFace(()=>{
+  let q=c.createLinearGradient(0,196,0,278);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(1,rgba(sdd,.5));c.fillStyle=q;c.fillRect(150,190,220,100);   // ظل الفك
+  q=c.createLinearGradient(310,0,340,0);q.addColorStop(0,'rgba(0,0,0,0)');q.addColorStop(1,rgba(sdd,.4));c.fillStyle=q;c.fillRect(290,110,60,170);
+  q=c.createLinearGradient(0,150,0,200);q.addColorStop(0,'rgba(255,255,255,0)');q.addColorStop(.5,'rgba(255,255,255,.12)');q.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=q;c.fillRect(246,150,20,60);  // تلميح أنف
+  q=c.createRadialGradient(256,232,2,256,232,26);q.addColorStop(0,rgba(sdd,.22));q.addColorStop(1,rgba(sdd,0));c.fillStyle=q;c.fillRect(226,206,60,50);
+  if(o.beard==='stubble'){q=c.createLinearGradient(0,170,0,274);q.addColorStop(0,rgba(hair,0));q.addColorStop(.35,rgba(hair,.3));q.addColorStop(1,rgba(hair,.5));c.fillStyle=q;c.fillRect(150,170,220,120)}
+  if(o.beard==='full'){q=c.createLinearGradient(0,180,0,280);q.addColorStop(0,shade(hair,.1));q.addColorStop(1,shade(hair,-.25));c.fillStyle=q;c.beginPath();c.moveTo(176,170);c.bezierCurveTo(182,252,214,284,256,284);c.bezierCurveTo(298,284,330,252,336,170);c.bezierCurveTo(318,214,296,222,256,222);c.bezierCurveTo(216,222,194,214,176,170);c.fill();}
+ });
+ c.strokeStyle=rgba(sdd,.55);c.lineWidth=2.5;c.stroke(face);
+ /* ---- شعر أمامي ---- */
+ const capHL=(hy,sideDrop=170)=>{c.save();const m=c.getTransform();c.translate(256,190);c.scale(1.075,1.06);c.translate(-256,-190);c.clip(face);c.setTransform(m);
+  c.beginPath();c.moveTo(140,40);c.lineTo(372,40);c.lineTo(372,sideDrop);c.bezierCurveTo(346,sideDrop-22,318,hy,256,hy);c.bezierCurveTo(194,hy,166,sideDrop-22,140,sideDrop);c.closePath();
+  const gg=c.createLinearGradient(0,70,0,hy+10);gg.addColorStop(0,shade(hair,.15));gg.addColorStop(1,shade(hair,-.12));c.fillStyle=gg;c.fill();
+  c.strokeStyle=rgba(hl,.45);c.lineWidth=5;c.beginPath();c.moveTo(206,hy-8);c.bezierCurveTo(226,92,286,88,312,116);c.stroke();
+  c.strokeStyle=rgba(shade(hair,-.4),.4);c.lineWidth=3;c.beginPath();c.moveTo(214,hy+2);c.bezierCurveTo(240,hy-30,276,hy-30,300,hy+2);c.stroke();c.restore()};
+ const HS=o.hair;
+ if(HS==='short'||HS==='long'||HS==='bun')capHL(132);
+ if(HS==='side'){capHL(124);c.strokeStyle=rgba(shade(hair,-.5),.7);c.lineWidth=3;c.beginPath();c.moveTo(226,98);c.quadraticCurveTo(240,120,236,138);c.stroke()}
+ if(HS==='afro'){capHL(112)}
+ if(HS==='buzz'){c.save();c.globalAlpha=.7;const ob=hair;o.hairc=mix(hair,skin,.4);capHL(124);o.hairc=ob;c.restore()}
+ if(HS==='curls'){capHL(122);const cl=(x,y,r)=>{let cg=c.createRadialGradient(x-r*.3,y-r*.35,2,x,y,r);cg.addColorStop(0,hl);cg.addColorStop(1,shade(hair,-.22));c.fillStyle=cg;c.beginPath();c.arc(x,y,r,0,7);c.fill()};
+  for(let i=0;i<13;i++){const a=Math.PI*(0.98+i*.086);cl(256+Math.cos(a)*96,172+Math.sin(a)*98,27)}
+  for(let i=0;i<9;i++){const a=Math.PI*(1.08+i*.105);cl(256+Math.cos(a)*66,158+Math.sin(a)*70,25)}}
+ if(HS==='bun'){let cg=c.createRadialGradient(248,64,2,256,70,32);cg.addColorStop(0,hl);cg.addColorStop(1,shade(hair,-.2));c.fillStyle=cg;c.beginPath();c.arc(256,72,30,0,7);c.fill()}
+ if(HS==='mohawk'){c.save();c.globalAlpha=.55;const ob=hair;o.hairc=mix(hair,skin,.5);capHL(120);o.hairc=ob;c.restore();let mg=c.createLinearGradient(0,40,0,130);mg.addColorStop(0,hl);mg.addColorStop(1,shade(hair,-.15));c.fillStyle=mg;c.beginPath();c.moveTo(228,134);c.bezierCurveTo(222,80,226,46,256,42);c.bezierCurveTo(286,46,290,80,284,134);c.bezierCurveTo(272,122,240,122,228,134);c.fill()}
+ if(HS==='bald'){clipFace(()=>{let bg=c.createRadialGradient(236,116,2,236,116,40);bg.addColorStop(0,'rgba(255,255,255,.35)');bg.addColorStop(1,'rgba(255,255,255,0)');c.fillStyle=bg;c.fillRect(190,90,100,60)})}
+ if(o.band){c.save();c.beginPath();c.moveTo(176,132);c.bezierCurveTo(212,112,300,112,336,132);c.lineTo(338,156);c.bezierCurveTo(300,138,212,138,174,156);c.closePath();c.fillStyle=o.bandc;c.fill();c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=2;c.stroke();c.strokeStyle='rgba(255,255,255,.4)';c.lineWidth=3;c.beginPath();c.moveTo(196,125);c.bezierCurveTo(230,114,284,114,316,125);c.stroke();c.restore()}
+ c.restore();c.restore()}
 
 /* ============ الحالة والواجهة ============ */
 let kind='frame';const RND=()=>Math.floor(Math.random()*1e6);
