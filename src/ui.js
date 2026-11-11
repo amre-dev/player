@@ -72,3 +72,6 @@ export function modal(content, { onClose } = {}) {
 
 export const lineLabel = { goalkeeper: 'حارس مرمى', first: 'خط أول', second: 'خط ثان' };
 export const fmtDate = (d) => new Date(d).toLocaleDateString('ar', { day: 'numeric', month: 'short' });
+
+// مسار الصور: نسبي للتطبيق، أو مسبوق بقاعدة (نسخة web/) أو رابط كامل
+export const assetUrl = (u) => (!u ? '' : /^https?:/.test(u) ? u : (window.__ASSET_BASE || '') + u);

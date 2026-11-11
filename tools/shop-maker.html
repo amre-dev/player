@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Player IQ — صانع المتجر</title>
+<style>
+:root{--bg:#0A1628;--bg2:#0F2440;--line:rgba(245,242,234,.14);--text:#F5F2EA;--muted:rgba(245,242,234,.6);--gold:#F2B705}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tajawal,system-ui,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+.logo{font-weight:900;letter-spacing:.06em;direction:ltr}.logo b{color:var(--gold)}
+.tabs{display:flex;gap:6px}.tab{font:inherit;font-weight:700;color:var(--muted);background:none;border:1px solid var(--line);border-radius:10px;padding:8px 16px;cursor:pointer}.tab.on{color:#1a1300;background:var(--gold);border-color:var(--gold)}
+main{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:20px;padding:20px;max-width:1200px;margin:0 auto}
+@media(max-width:820px){main{grid-template-columns:1fr}}
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px;position:sticky;top:70px;align-self:start}
+.cv-wrap{position:relative;border-radius:18px;overflow:hidden}
+.cv-wrap.chk{background:conic-gradient(#2a3a55 25%,#1b2a44 0 50%,#2a3a55 0 75%,#1b2a44 0) 0 0/24px 24px}
+canvas{display:block;width:100%;height:auto}
+.guides{position:absolute;inset:0;pointer-events:none;display:none}.guides.on{display:block}
+.guides i{position:absolute;border:1.5px dashed rgba(255,255,255,.7);border-radius:8px;font:11px/1 Tajawal;color:#fff;padding:3px;font-style:normal}
+label{display:flex;flex-direction:column;gap:5px;font-size:.85rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}
+select,input,textarea{font:inherit;color:var(--text);background:rgba(245,242,234,.06);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0;width:100%}
+input[type=color]{padding:2px;height:40px}input[type=checkbox]{width:auto}
+.sw{display:flex;gap:6px;flex-wrap:wrap}.sw button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}.sw button.on{border-color:#fff;box-shadow:0 0 0 2px var(--gold)}
+.btn{font:inherit;font-weight:700;border:1px solid var(--line);border-radius:10px;padding:10px 14px;color:var(--text);background:rgba(245,242,234,.06);cursor:pointer}.btn.p{background:var(--gold);color:#1a1300;border-color:var(--gold)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}h2{font-size:1rem;margin:0 0 10px}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}.gallery .t{background:rgba(0,0,0,.2);border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:6px}
+.cart{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}.cart .it{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);border-radius:10px;padding:8px 10px;font-size:.9rem}
+textarea{min-height:120px;font-family:ui-monospace,monospace;font-size:.8rem;direction:ltr}.muted{color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<header><div class="logo">PLAYER <b>IQ</b> · صانع المتجر</div>
+<div class="tabs"><button class="tab on" data-k="frame">إطار بطاقة</button><button class="tab" data-k="avatar">شخصية</button><button class="tab" data-k="title">ألقاب</button></div></header>
+<main>
+ <div class="stage" id="stage">
+  <div class="cv-wrap" id="cvw" style="width:min(100%,340px)"><canvas id="cv"></canvas><div class="guides" id="guides"></div></div>
+  <div class="row"><label class="row" style="flex-direction:row"><input type="checkbox" id="gtoggle"> أظهر مناطق النص</label></div>
+  <div class="row"><button class="btn" id="rand">🎲 عشوائي</button><button class="btn" id="dl">تحميل PNG</button><button class="btn p" id="add">+ أضف للقائمة</button></div>
+ </div>
+ <div class="stack" style="display:flex;flex-direction:column;gap:16px">
+  <div class="panel" id="controls"></div>
+  <div class="panel"><h2>تصاميم مقترحة (اضغط لتحميلها بالمحرر)</h2><div class="row" style="margin-bottom:10px"><button class="btn" id="gen">ولّد 12 تصميم عشوائي</button></div><div class="gallery" id="gallery"></div></div>
+  <div class="panel"><h2>قائمة المنتجات (<span id="cnt">0</span>)</h2><div class="cart" id="cart"></div>
+   <div class="row" style="margin:10px 0"><button class="btn" id="dlall">تحميل كل الصور</button><button class="btn p" id="copysql">نسخ SQL للكل</button><button class="btn" id="clear">تفريغ</button></div>
+   <textarea id="sql" readonly placeholder="هنا يظهر SQL جاهز للصق في Supabase ← SQL Editor"></textarea>
+   <p class="muted">الإطارات تُحمَّل JPG (أخف) والشخصيات PNG شفاف. ضعها في <b>public/frames/</b> للإطارات و <b>public/avatars/</b> للشخصيات، ثم شغّل SQL.</p></div>
+ </div>
+</main>
+<script>
+const FW=562,FH=793,AS=512;
+const $=s=>document.querySelector(s);
+function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const pick=(r,arr)=>arr[Math.floor(r()*arr.length)];
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=amt<0?0:255,p=Math.abs(amt);r=Math.round((f-r)*p+r);g=Math.round((f-g)*p+g);b=Math.round((f-b)*p+b);return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1)}
+const rgba=(hex,a)=>{const n=parseInt(hex.slice(1),16);return `rgba(${n>>16},${n>>8&255},${n&255},${a})`};
+
+/* ============ الإطارات ============ */
+const PAL={gold:{n:'ذهب الليل',a:'#071222',b:'#16335c',c:'#F2B705'},emerald:{n:'زمرد',a:'#04180f',b:'#0f4a3a',c:'#4ade9a'},ruby:{n:'ياقوت',a:'#1c0509',b:'#5c1426',c:'#ff6b7d'},
+ ice:{n:'جليد',a:'#07182a',b:'#12507a',c:'#7fdcff'},sun:{n:'غروب',a:'#220c04',b:'#7a2e0c',c:'#ffa24a'},steel:{n:'فولاذ',a:'#0d1117',b:'#343c4a',c:'#cfd6e2'},
+ sand:{n:'رمال',a:'#2a2114',b:'#6e5a38',c:'#f3e2b8'},mint:{n:'نعناع',a:'#08201f',b:'#145e58',c:'#a7ffe0'}};
+const PATS={shards:'شظايا',hex:'خلايا',rays:'أشعة',stripes:'خطوط',circuit:'دوائر إلكترونية',waves:'موجات',dots:'نقاط',pitch:'خطوط ملعب',stars:'نجوم'};
+const BORDERS={simple:'بسيط',double:'مزدوج',notched:'زوايا مقطوعة',brackets:'أقواس زوايا',glow:'متوهج'};
+const RAR={common:'عادي',rare:'نادر',epic:'ملحمي',legendary:'أسطوري'};
+const PRICE={frame:{common:80,rare:200,epic:450,legendary:900},avatar:{common:100,rare:250,epic:500,legendary:1000},title:{common:40,rare:100,epic:200,legendary:400}};
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function notch(c,x,y,w,h,k){c.beginPath();c.moveTo(x+k,y);c.lineTo(x+w-k,y);c.lineTo(x+w,y+k);c.lineTo(x+w,y+h-k);c.lineTo(x+w-k,y+h);c.lineTo(x+k,y+h);c.lineTo(x,y+h-k);c.lineTo(x,y+k);c.closePath()}
+const PATTERN={
+ shards(c,p,r){for(let i=0;i<30;i++){const x=r()*FW,y=r()*FH,s=60+r()*160;c.beginPath();c.moveTo(x,y);c.lineTo(x+s*(r()-.3),y+s*r());c.lineTo(x-s*r(),y+s*(r()+.2));c.closePath();c.fillStyle=rgba(r()>.5?p.c:'#ffffff',.04+r()*.08);c.fill()}},
+ hex(c,p){const s=46,h=s*Math.sqrt(3)/2;c.strokeStyle=rgba(p.c,.16);c.lineWidth=1.5;for(let row=-1;row<FH/h+1;row++)for(let col=-1;col<FW/(s*1.5)+1;col++){const x=col*s*1.5,y=row*h*1+(col%2?h/2:0);c.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k;c.lineTo(x+s*.5*Math.cos(a)*1.9/1.9+0,y+s*.5*Math.sin(a))}c.closePath();c.stroke()}},
+ rays(c,p){c.save();c.translate(FW/2,320);for(let i=0;i<28;i++){c.rotate(Math.PI*2/28);if(i%2)continue;c.beginPath();c.moveTo(0,0);c.lineTo(-40,900);c.lineTo(40,900);c.closePath();c.fillStyle=rgba(p.c,.07);c.fill()}c.restore()},
+ stripes(c,p){c.save();c.rotate(-.5);for(let x=-600;x<1400;x+=64){c.fillStyle=rgba(p.c,.07);c.fillRect(x,-400,30,1700)}c.restore()},
+ circuit(c,p,r){c.strokeStyle=rgba(p.c,.22);c.fillStyle=rgba(p.c,.35);c.lineWidth=2;for(let i=0;i<22;i++){let x=r()*FW,y=r()*FH;c.beginPath();c.moveTo(x,y);for(let k=0;k<4;k++){if(k%2)y+=(r()-.5)*160;else x+=(r()-.5)*200;c.lineTo(x,y)}c.stroke();c.beginPath();c.arc(x,y,4,0,7);c.fill()}},
+ waves(c,p){c.lineWidth=2;for(let i=0;i<16;i++){c.strokeStyle=rgba(p.c,.05+i*.008);c.beginPath();for(let x=0;x<=FW;x+=8){const y=FH*(i/15)+Math.sin(x/70+i)*22;x?c.lineTo(x,y):c.moveTo(x,y)}c.stroke()}},
+ dots(c,p){for(let y=10;y<FH;y+=22)for(let x=(y/22%2?0:11);x<FW;x+=22){c.beginPath();c.arc(x,y,1+3.2*(y/FH),0,7);c.fillStyle=rgba(p.c,.16);c.fill()}},
+ pitch(c,p){c.strokeStyle=rgba(p.c,.26);c.lineWidth=3;c.strokeRect(34,34,FW-68,FH-68);c.beginPath();c.moveTo(34,FH/2);c.lineTo(FW-34,FH/2);c.stroke();c.beginPath();c.arc(FW/2,FH/2,100,0,7);c.stroke();c.beginPath();c.arc(FW/2,FH/2,5,0,7);c.fillStyle=rgba(p.c,.4);c.fill();c.strokeRect(130,34,FW-260,130);c.strokeRect(130,FH-164,FW-260,130);c.strokeRect(205,34,FW-410,50);c.strokeRect(205,FH-84,FW-410,50)},
+ stars(c,p,r){for(let i=0;i<46;i++){const x=r()*FW,y=r()*FH,s=4+r()*14;c.fillStyle=rgba(r()>.4?p.c:'#fff',.12+r()*.3);c.beginPath();c.moveTo(x,y-s);c.quadraticCurveTo(x,y,x+s,y);c.quadraticCurveTo(x,y,x,y+s);c.quadraticCurveTo(x,y,x-s,y);c.quadraticCurveTo(x,y,x,y-s);c.fill()}}
+};
+function drawFrame(c,o,s){
+ const p=PAL[o.pal],r=rng(o.seed);c.save();c.scale(s,s);
+ let g=c.createLinearGradient(FW*.2,0,FW*.8,FH);g.addColorStop(0,p.b);g.addColorStop(1,p.a);c.fillStyle=g;c.fillRect(0,0,FW,FH);
+ PATTERN[o.pat](c,p,r);
+ g=c.createRadialGradient(FW/2,FH*.4,40,FW/2,FH*.4,300);g.addColorStop(0,rgba(p.a,.55));g.addColorStop(1,rgba(p.a,0));c.fillStyle=g;c.fillRect(0,0,FW,FH);   // منطقة هادئة لقراءة الاسم والصورة
+ g=c.createRadialGradient(FW/2,FH/2,FH*.25,FW/2,FH/2,FH*.75);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.5)');c.fillStyle=g;c.fillRect(0,0,FW,FH);
+ c.lineWidth=3;c.strokeStyle=p.c;c.lineJoin='round';
+ const ep=o.rar==='epic'||o.rar==='legendary';
+ if(ep){c.shadowColor=p.c;c.shadowBlur=o.rar==='legendary'?26:16}
+ const B=o.border;
+ if(B==='simple'||B==='glow'){if(B==='glow'){c.shadowColor=p.c;c.shadowBlur=24}rr(c,14,14,FW-28,FH-28,28);c.stroke()}
+ if(B==='double'){rr(c,12,12,FW-24,FH-24,30);c.stroke();c.lineWidth=1.5;rr(c,24,24,FW-48,FH-48,20);c.stroke()}
+ if(B==='notched'){notch(c,14,14,FW-28,FH-28,34);c.stroke();c.lineWidth=1.5;notch(c,26,26,FW-52,FH-52,24);c.stroke()}
+ if(B==='brackets'){c.lineWidth=1.5;c.globalAlpha=.4;rr(c,16,16,FW-32,FH-32,12);c.stroke();c.globalAlpha=1;c.lineWidth=6;c.lineCap='round';const L=76,m=16;
+  [[m,m,1,1],[FW-m,m,-1,1],[m,FH-m,1,-1],[FW-m,FH-m,-1,-1]].forEach(([x,y,dx,dy])=>{c.beginPath();c.moveTo(x+dx*L,y);c.lineTo(x,y);c.lineTo(x,y+dy*L);c.stroke()})}
+ c.shadowBlur=0;
+ if(o.rar==='rare'||ep){c.lineWidth=1.5;c.strokeStyle=rgba(p.c,.55);rr(c,34,34,FW-68,FH-68,16);c.stroke()}
+ if(ep){g=c.createLinearGradient(0,0,FW,0);g.addColorStop(0,rgba(p.c,0));g.addColorStop(.5,rgba(p.c,.9));g.addColorStop(1,rgba(p.c,0));c.fillStyle=g;c.fillRect(60,18,FW-120,5);c.fillRect(60,FH-23,FW-120,5)}
+ if(o.rar==='legendary'){g=c.createLinearGradient(0,0,FW,FH);g.addColorStop(.35,'rgba(255,255,255,0)');g.addColorStop(.5,'rgba(255,255,255,.2)');g.addColorStop(.65,'rgba(255,255,255,0)');c.fillStyle=g;c.fillRect(0,0,FW,FH);PATTERN.stars(c,p,rng(o.seed+7))}
+ c.restore()}
+
+/* ============ الشخصيات (نصف جسم، بدون وجه) ============ */
+const SKIN=['#F5D5B8','#E8B992','#D39B6E','#B8794D','#8A5634','#5E3A22'];
+const HAIRC=['#1a1412','#3b2416','#6b4423','#a9702f','#d9b25a','#c4472b','#8d8d92','#f2f2f2'];
+const HAIR={short:'قصير',buzz:'حليق خفيف',side:'جانبي',afro:'أفرو',curls:'مجعّد',long:'طويل',bun:'ربطة',mohawk:'موهوك',bald:'أصلع'};
+const JP={plain:'سادة',stripes:'خطوط طولية',hoops:'خطوط عرضية',sash:'شريط قطري',halves:'نصفين',chevron:'شيفرون'};
+const COLLAR={round:'دائري',v:'V',polo:'بولو'};const BUILD={slim:'نحيف',medium:'متوسط',broad:'عريض'};const HEAD={round:'دائري',oval:'بيضاوي',square:'مربّع'};const BEARD={none:'بدون',stubble:'خفيفة',full:'كاملة'};
+function bodyPath(c,hw){const L=256-hw,R=256+hw;c.beginPath();c.moveTo(L,AS);c.lineTo(L,372);c.bezierCurveTo(L,326,L+30,304,178,292);c.quadraticCurveTo(256,272,334,292);c.bezierCurveTo(R-30,304,R,326,R,372);c.lineTo(R,AS);c.closePath()}
+function headPath(c,o,pad=0){const cx=256,cy=170;if(o.head==='square'){rr(c,cx-62-pad,cy-70-pad,124+2*pad,142+2*pad,44+pad)}else{const rx=o.head==='oval'?57:64,ry=o.head==='oval'?78:70;c.beginPath();c.ellipse(cx,cy,rx+pad,ry+pad,0,0,7)}}
+function drawAvatar(c,o,s){
+ c.save();c.scale(s,s);const hw={slim:168,medium:200,broad:232}[o.build],L=256-hw,R=256+hw,skin=o.skin,sd=shade(skin,-.22),hair=o.hairc,sec=o.sec;
+ // شعر خلفي
+ c.fillStyle=hair;
+ if(o.hair==='afro'){c.beginPath();c.arc(256,150,98,0,7);c.fill()}
+ if(o.hair==='long'){rr(c,256-84,100,168,230,60);c.fill()}
+ // رقبة
+ c.fillStyle=sd;c.fillRect(256-27,200,54,100);
+ // جسم
+ bodyPath(c,hw);c.fillStyle=o.pri;c.fill();c.save();bodyPath(c,hw);c.clip();
+ const J=o.jp;
+ if(J==='stripes'){for(let x=L;x<R;x+=64){c.fillStyle=sec;c.fillRect(x,260,32,260)}}
+ if(J==='hoops'){for(let y=300;y<AS;y+=60){c.fillStyle=sec;c.fillRect(L,y,hw*2,28)}}
+ if(J==='sash'){c.fillStyle=sec;c.beginPath();c.moveTo(L-10,300);c.lineTo(L+70,296);c.lineTo(R+10,AS);c.lineTo(R-70,AS);c.closePath();c.fill()}
+ if(J==='halves'){c.fillStyle=sec;c.fillRect(256,260,hw+10,260)}
+ if(J==='chevron'){c.fillStyle=sec;for(let k=0;k<3;k++){const y=340+k*52;c.beginPath();c.moveTo(L,y);c.lineTo(256,y+60);c.lineTo(R,y);c.lineTo(R,y+22);c.lineTo(256,y+82);c.lineTo(L,y+22);c.closePath();c.fill()}}
+ // أكمام وأذرع
+ c.fillStyle=sec;c.fillRect(L,378,60,16);c.fillRect(R-60,378,60,16);
+ c.fillStyle=skin;c.fillRect(L,394,60,140);c.fillRect(R-60,394,60,140);
+ c.strokeStyle='rgba(0,0,0,.28)';c.lineWidth=3;c.beginPath();c.moveTo(L+60,330);c.lineTo(L+60,AS);c.moveTo(R-60,330);c.lineTo(R-60,AS);c.stroke();
+ let g=c.createLinearGradient(L,0,R,0);g.addColorStop(0,'rgba(0,0,0,.3)');g.addColorStop(.35,'rgba(0,0,0,0)');g.addColorStop(.65,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.3)');c.fillStyle=g;c.fillRect(L,260,hw*2,260);
+ c.restore();
+ // ياقة
+ c.lineJoin='round';
+ if(o.collar==='round'){c.fillStyle=sd;c.beginPath();c.ellipse(256,292,40,22,0,0,7);c.fill();c.strokeStyle=sec;c.lineWidth=9;c.beginPath();c.ellipse(256,291,44,26,0,0,7);c.stroke()}
+ if(o.collar==='v'){c.fillStyle=sd;c.beginPath();c.moveTo(210,282);c.lineTo(302,282);c.lineTo(256,340);c.closePath();c.fill();c.strokeStyle=sec;c.lineWidth=8;c.stroke()}
+ if(o.collar==='polo'){c.fillStyle=sd;c.beginPath();c.ellipse(256,292,38,20,0,0,7);c.fill();c.fillStyle=sec;[[-1],[1]].forEach(([d])=>{c.beginPath();c.moveTo(256+d*10,286);c.lineTo(256+d*52,284);c.lineTo(256+d*26,326);c.closePath();c.fill()})}
+ if(o.num){c.font='900 64px Tajawal,Impact,sans-serif';c.textAlign='center';c.fillStyle=sec;c.globalAlpha=.92;c.fillText(String(o.num).slice(0,2),256,452);c.globalAlpha=1}
+ // رأس
+ headPath(c,o);g=c.createRadialGradient(236,140,10,256,170,100);g.addColorStop(0,shade(skin,.12));g.addColorStop(1,skin);c.fillStyle=g;c.fill();
+ c.fillStyle=sd;[-1,1].forEach(d=>{const rx=o.head==='oval'?57:64;c.beginPath();c.ellipse(256+d*(rx+1),182,9,16,0,0,7);c.fill()});
+ // لحية
+ c.save();headPath(c,o);c.clip();
+ if(o.beard==='stubble'){c.fillStyle=rgba(hair,.32);c.fillRect(150,176,220,140)}
+ if(o.beard==='full'){c.fillStyle=hair;c.beginPath();c.moveTo(186,176);c.quadraticCurveTo(190,262,256,262);c.quadraticCurveTo(322,262,326,176);c.quadraticCurveTo(300,208,256,206);c.quadraticCurveTo(212,208,186,176);c.fill()}
+ if(o.band){c.fillStyle=o.bandc;c.fillRect(150,118,220,20);c.fillStyle='rgba(255,255,255,.25)';c.fillRect(150,121,220,3)}
+ c.restore();
+ // شعر أمامي
+ c.fillStyle=hair;
+ const cap=(top=-0.42)=>{c.save();headPath(c,o,6);c.clip();c.beginPath();c.moveTo(170,90);c.lineTo(342,90);c.lineTo(342,160);c.quadraticCurveTo(326,170+70*top,256,170+70*top);c.quadraticCurveTo(186,170+70*top,170,160);c.closePath();c.fill();c.restore()};
+ if(['short','side','afro','curls','long','bun'].includes(o.hair))cap(o.hair==='afro'?-.7:-.42);
+ if(o.hair==='buzz'){c.globalAlpha=.55;cap(-.5);c.globalAlpha=1}
+ if(o.hair==='side'){c.strokeStyle='rgba(255,255,255,.25)';c.lineWidth=3;c.beginPath();c.moveTo(232,102);c.quadraticCurveTo(250,124,246,136);c.stroke()}
+ if(o.hair==='curls'){for(let i=0;i<9;i++){const a=Math.PI*(1.08+i*.105);c.beginPath();c.arc(256+Math.cos(a)*68,158+Math.sin(a)*74,19,0,7);c.fill()}}
+ if(o.hair==='bun'){c.beginPath();c.arc(256,84,28,0,7);c.fill()}
+ if(o.hair==='mohawk'){rr(c,238,66,36,92,16);c.fill()}
+ if(o.band&&o.hair!=='bald'){/* الشريط فوق الشعر */c.save();headPath(c,o,3);c.clip();c.fillStyle=o.bandc;c.fillRect(150,118,220,20);c.restore()}
+ // ظل تحت الذقن
+ c.save();bodyPath(c,hw);c.clip();g=c.createRadialGradient(256,296,10,256,296,80);g.addColorStop(0,'rgba(0,0,0,.35)');g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(150,230,220,120);c.restore();
+ c.restore()}
+
+/* ============ الحالة والواجهة ============ */
+let kind='frame';const RND=()=>Math.floor(Math.random()*1e6);
+const defaults={frame:()=>({pal:'gold',pat:'shards',border:'simple',rar:'common',seed:RND(),name:'',price:80,slug:''}),
+ avatar:()=>({skin:SKIN[2],hair:'short',hairc:HAIRC[0],pri:'#F2B705',sec:'#0A1628',jp:'plain',collar:'round',build:'medium',head:'round',beard:'none',band:false,bandc:'#ffffff',num:'',rar:'common',name:'',price:100,slug:''})};
+let S={frame:defaults.frame(),avatar:defaults.avatar(),title:{text:'نجم صاعد|40\nهدّاف الحارة|100\nملك التخمين|200\nأسطورة الملاعب|400'}};
+let cart=[];try{cart=JSON.parse(localStorage.getItem('pq-cart')||'[]')}catch{}
+const save=()=>{try{localStorage.setItem('pq-cart',JSON.stringify(cart))}catch{}};
+const cv=$('#cv'),ctx=cv.getContext('2d');
+function sizeOf(k){return k==='frame'?[FW,FH]:[AS,AS]}
+function render(){if(kind==='title'){$('#stage').style.display='none';return}$('#stage').style.display='flex';
+ const [w,h]=sizeOf(kind);cv.width=w;cv.height=h;ctx.clearRect(0,0,w,h);(kind==='frame'?drawFrame:drawAvatar)(ctx,S[kind],1);
+ $('#cvw').classList.toggle('chk',kind==='avatar');$('#cvw').style.width=kind==='frame'?'min(100%,340px)':'min(100%,340px)';buildGuides()}
+function buildGuides(){const g=$('#guides');g.className='guides'+($('#gtoggle').checked&&kind==='frame'?' on':'');
+ g.innerHTML='<i style="top:15%;left:22%;right:22%;height:40%">صورة الشخصية</i><i style="top:58%;left:8%;right:8%;height:12%">الاسم / اللقب</i><i style="bottom:8%;left:6%;right:6%;height:14%">الإحصائيات</i>'}
+function field(label,html,full){return `<label class="${full?'full':''}">${label}${html}</label>`}
+function opts(map,val){return `<select>${Object.entries(map).map(([k,v])=>`<option value="${k}" ${k===val?'selected':''}>${v}</option>`).join('')}</select>`}
+function swatches(list,val,fn){return `<div class="sw" data-sw="${fn}">${list.map(c=>`<button style="background:${c}" data-v="${c}" class="${c===val?'on':''}"></button>`).join('')}</div>`}
+function controls(){const el=$('#controls');const o=S[kind];
+ if(kind==='frame'){el.innerHTML=`<div class="grid">
+  ${field('اللوحة اللونية',swatches(Object.values(PAL).map(p=>p.c),PAL[o.pal].c,'pal'),1)}
+  ${field('النقش',opts(PATS,o.pat))}${field('الإطار',opts(BORDERS,o.border))}${field('الندرة',opts(RAR,o.rar))}
+  ${field('رقم التصميم (seed)',`<input type="number" value="${o.seed}">`)}
+  ${field('الاسم بالعربي',`<input value="${o.name}" placeholder="مثال: نجوم الليل">`)}${field('السعر',`<input type="number" min="0" value="${o.price}">`)}
+  ${field('معرّف الملف (إنجليزي)',`<input value="${o.slug}" placeholder="auto">`,1)}</div>`;
+  const f=el.querySelectorAll('select,input'),keys=['pat','border','rar','seed','name','price','slug'];
+  f.forEach((e,i)=>e.oninput=()=>{o[keys[i]]=['seed','price'].includes(keys[i])?+e.value:e.value;if(keys[i]==='rar'){o.price=PRICE.frame[o.rar];controls()}render()});
+  el.querySelectorAll('[data-sw=pal] button').forEach(b=>b.onclick=()=>{o.pal=Object.keys(PAL).find(k=>PAL[k].c===b.dataset.v);controls();render()});
+ } else if(kind==='avatar'){el.innerHTML=`<div class="grid">
+  ${field('لون البشرة',swatches(SKIN,o.skin,'skin'),1)}${field('لون الشعر',swatches(HAIRC,o.hairc,'hairc'),1)}
+  ${field('الشعر',opts(HAIR,o.hair))}${field('الجسم',opts(BUILD,o.build))}${field('شكل الرأس',opts(HEAD,o.head))}${field('اللحية',opts(BEARD,o.beard))}
+  ${field('القميص',`<input type="color" value="${o.pri}">`)}${field('لون ثانوي',`<input type="color" value="${o.sec}">`)}
+  ${field('نقش القميص',opts(JP,o.jp))}${field('الياقة',opts(COLLAR,o.collar))}
+  ${field('رقم على الصدر',`<input maxlength="2" value="${o.num}" placeholder="10">`)}${field('شريط رأس',`<div class="row"><input type="checkbox" ${o.band?'checked':''}><input type="color" value="${o.bandc}"></div>`)}
+  ${field('الندرة (للسعر)',opts(RAR,o.rar))}${field('السعر',`<input type="number" min="0" value="${o.price}">`)}
+  ${field('الاسم بالعربي',`<input value="${o.name}" placeholder="مثال: لاعب الأحمر">`)}${field('معرّف الملف',`<input value="${o.slug}" placeholder="auto">`)}</div>`;
+  const keys=['hair','build','head','beard','pri','sec','jp','collar','num','band','bandc','rar','price','name','slug'];
+  el.querySelectorAll('select,input').forEach((e,i)=>e.oninput=()=>{const k=keys[i];o[k]=e.type==='checkbox'?e.checked:e.type==='number'?+e.value:e.value;if(k==='rar'){o.price=PRICE.avatar[o.rar];controls()}render()});
+  ['skin','hairc'].forEach(k=>el.querySelectorAll(`[data-sw=${k}] button`).forEach(b=>b.onclick=()=>{o[k]=b.dataset.v;controls();render()}));
+ } else {el.innerHTML=`<h2>الألقاب (نص فقط، بدون صورة)</h2><p class="muted">سطر لكل لقب بالشكل: <b>الاسم|السعر</b></p><textarea style="direction:rtl;min-height:160px">${o.text}</textarea><div class="row" style="margin-top:10px"><button class="btn p" id="addt">+ أضف الألقاب للقائمة</button></div>`;
+  el.querySelector('textarea').oninput=e=>o.text=e.target.value;
+  $('#addt').onclick=()=>{o.text.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const [n,p]=l.split('|');cart.push({kind:'title',name:n.trim(),price:parseInt(p)||PRICE.title.common})});save();paintCart()}}
+ render()}
+const slugOf=(k,o)=>(o.slug||`${k}-${(o.rar||'c')[0]}${String(o.seed||Math.abs([...JSON.stringify(o)].reduce((a,ch)=>a*31+ch.charCodeAt(0)|0,7))).slice(-6)}`).replace(/[^a-z0-9_-]/gi,'-').toLowerCase();
+function snapshot(k){const o=JSON.parse(JSON.stringify(S[k]));o.slug=slugOf(k,o);return{kind:k,name:o.name||(k==='frame'?'إطار':'شخصية'),price:o.price,slug:o.slug,state:o}}
+function toBlob(item,cb){const [w,h]=sizeOf(item.kind),c=document.createElement('canvas');c.width=w*2;c.height=h*2;(item.kind==='frame'?drawFrame:drawAvatar)(c.getContext('2d'),item.state,2);c.toBlob(cb,item.kind==='frame'?'image/jpeg':'image/png',.9)}
+function download(item){toBlob(item,b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=item.slug+(item.kind==='frame'?'.jpg':'.png');a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)})}
+const esc=s=>String(s).replace(/'/g,"''");
+function sqlFor(items){let n=10;return items.map(it=>{n+=10;const img=it.kind==='title'?'null':`'${it.kind==='frame'?'frames':'avatars'}/${it.slug}.${it.kind==='frame'?'jpg':'png'}'`;
+ return `insert into public.shop_items(type,name_ar,price,image_url,sort_order,active) values ('${it.kind}','${esc(it.name)}',${it.price},${img},${n},true);`}).join('\n')}
+function paintCart(){$('#cnt').textContent=cart.length;$('#cart').innerHTML=cart.map((it,i)=>`<div class="it"><span>${it.kind==='frame'?'إطار':it.kind==='avatar'?'شخصية':'لقب'} · ${it.name} · ${it.price}</span><span class="row"><button class="btn" data-l="${i}">تحرير</button><button class="btn" data-x="${i}">حذف</button></span></div>`).join('')||'<div class="muted">القائمة فاضية</div>';
+ $('#cart').querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.x,1);save();paintCart()});
+ $('#cart').querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{const it=cart[+b.dataset.l];if(it.kind==='title')return;S[it.kind]=JSON.parse(JSON.stringify(it.state));setKind(it.kind)});
+ $('#sql').value=sqlFor(cart)}
+function setKind(k){kind=k;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.k===k));controls()}
+function randomState(k){const r=rng(RND());if(k==='frame'){const rar=pick(r,['common','common','rare','rare','epic','legendary']);return{pal:pick(r,Object.keys(PAL)),pat:pick(r,Object.keys(PATS)),border:pick(r,Object.keys(BORDERS)),rar,seed:RND(),name:'',price:PRICE.frame[rar],slug:''}}
+ const rar=pick(r,['common','common','rare','epic','legendary']);const hue=()=>'#'+[0,0,0].map(()=>Math.floor(60+r()*180).toString(16).padStart(2,'0')).join('');
+ const pri=pick(r,['#F2B705','#c0392b','#1e6fd9','#1f9d5c','#f5f2ea','#111827','#e67e22','#0ea5a4']);
+ return{skin:pick(r,SKIN),hair:pick(r,Object.keys(HAIR)),hairc:pick(r,HAIRC),pri,sec:pick(r,['#0A1628','#ffffff','#F2B705','#111827']),jp:pick(r,Object.keys(JP)),collar:pick(r,Object.keys(COLLAR)),build:pick(r,Object.keys(BUILD)),head:pick(r,Object.keys(HEAD)),beard:pick(r,['none','none','stubble','full']),band:r()>.8,bandc:hue(),num:r()>.5?String(1+Math.floor(r()*29)):'',rar,name:'',price:PRICE.avatar[rar],slug:''}}
+function gallery(){if(kind==='title')return;const g=$('#gallery');g.innerHTML='';for(let i=0;i<12;i++){const st=randomState(kind),[w,h]=sizeOf(kind),c=document.createElement('canvas');c.width=w/2;c.height=h/2;
+  (kind==='frame'?drawFrame:drawAvatar)(c.getContext('2d'),st,.5);const t=document.createElement('div');t.className='t';if(kind==='avatar')t.style.background='#1b2a44';t.append(c);const b=document.createElement('button');b.className='btn';b.textContent='استخدم';b.onclick=()=>{S[kind]=st;controls()};t.append(b);g.append(t)}}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{setKind(t.dataset.k);gallery()});
+$('#rand').onclick=()=>{if(kind==='title')return;const keep={name:S[kind].name};S[kind]={...randomState(kind),...keep};controls()};
+$('#dl').onclick=()=>download(snapshot(kind));
+$('#add').onclick=()=>{const it=snapshot(kind);if(!it.state.name)it.name=it.name;cart.push(it);save();paintCart()};
+$('#gen').onclick=gallery;$('#gtoggle').onchange=buildGuides;
+$('#dlall').onclick=()=>{cart.filter(c=>c.kind!=='title').forEach((it,i)=>setTimeout(()=>download(it),i*400))};
+$('#copysql').onclick=async()=>{try{await navigator.clipboard.writeText($('#sql').value)}catch{$('#sql').select();document.execCommand('copy')}};
+$('#clear').onclick=()=>{if(confirm('تفريغ القائمة؟')){cart=[];save();paintCart()}};
+window.__api={S,setKind,drawFrame,drawAvatar,randomState,get cart(){return cart}};
+document.fonts&&document.fonts.ready.then(render);
+controls();gallery();paintCart();
+</script>
+</body>
+</html>

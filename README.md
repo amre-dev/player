@@ -25,3 +25,7 @@
 مثلا GitHub Pages: `https://amre-dev.github.io/player/web/`. لا تفتحه بنقر مزدوج (file://) لأن وحدات JS تحتاج خادما.
 ## إضافة منتجات للمتجر
 أدخل صفا في جدول `shop_items`: type (`frame` أو `title`)، name_ar، price، image_url، sort_order، active=true.
+
+## صانع منتجات المتجر
+افتح `tools/shop-maker.html` بالمتصفح: صمّم إطارات بطاقة وشخصيات (نصف جسم بدون وجه) وألقاب، أضفها للقائمة، حمّل الصور ثم الصق الـ SQL بـ Supabase.
+الإطارات → `public/frames/*.jpg`، الشخصيات → `public/avatars/*.png`، ويُكتب المسار بالقاعدة نسبيا (`frames/x.jpg`).

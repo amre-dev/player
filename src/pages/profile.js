@@ -1,4 +1,4 @@
-import { h, icon, fmtDate } from '../ui.js';
+import { h, icon, fmtDate, assetUrl } from '../ui.js';
 import { sb, q } from '../api/client.js';
 import { store } from '../store.js';
 import { navBar } from '../components.js';
@@ -7,7 +7,7 @@ export async function profilePage(root) {
   const me = store.me;
   const [hist, items] = await Promise.all([
     q(sb.from('match_history').select('*').order('created_at', { ascending: false }).limit(50)),
-    q(sb.from('shop_items').select('id,name_ar,image_url,type').in('id', [me.avatar_frame_id, me.title_id].filter(Boolean))).catch(() => []),
+    q(sb.from('shop_items').select('id,name_ar,image_url,type').in('id', [me.avatar_frame_id, me.title_id, me.avatar_id].filter(Boolean))).catch(() => []),
   ]);
   const wins = hist.filter(m => m.winner_id === me.id).length;
   const draws = hist.filter(m => !m.winner_id).length;
@@ -15,11 +15,12 @@ export async function profilePage(root) {
   const rate = hist.length ? Math.round((wins / hist.length) * 100) : 0;
   const frame = items.find(i => i.id === me.avatar_frame_id);
   const title = items.find(i => i.id === me.title_id);
+  const avatar = items.find(i => i.id === me.avatar_id);
   const stat = (n, l) => h('div', { class: 'stat' }, h('b', null, n), h('small', { class: 'muted' }, l));
 
   root.replaceChildren(h('main', { class: 'page' },
-    h('div', { class: 'player-card', style: frame?.image_url ? `background-image:url(${frame.image_url})` : '' },
-      h('div', { class: 'pc-avatar' }, icon('user', 56)),
+    h('div', { class: 'player-card', style: frame?.image_url ? `background-image:url(${assetUrl(frame.image_url)})` : '' },
+      h('div', { class: 'pc-avatar' }, avatar?.image_url ? h('img', { src: assetUrl(avatar.image_url), alt: '' }) : icon('user', 56)),
       h('div', { class: 'pc-identity' }, h('div', { class: 'pc-name' }, me.username), title ? h('div', { class: 'gold small' }, title.name_ar) : null),
       h('div', { class: 'pc-stats' }, stat(hist.length, 'مباريات'), stat(wins, 'فوز'), stat(losses, 'خسارة'), stat(rate + '%', 'نسبة الفوز'))),
     h('section', { class: 'card stack' }, h('h3', null, 'آخر المباريات'),

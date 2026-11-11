@@ -1,4 +1,4 @@
-import { h, icon, run, toast } from '../ui.js';
+import { h, icon, run, toast, assetUrl } from '../ui.js';
 import { rpc, sb, q } from '../api/client.js';
 import { store, refreshMe } from '../store.js';
 import { navBar } from '../components.js';
@@ -19,10 +19,10 @@ export async function shopPage(root) {
     if (!items.length) grid.append(h('div', { class: 'empty span2' }, 'المتجر فاضي حاليا، تابعنا قريبا.'));
     for (const it of items) {
       const mine = owned.has(it.id);
-      const equipped = store.me.avatar_frame_id === it.id || store.me.title_id === it.id;
+      const equipped = store.me.avatar_frame_id === it.id || store.me.title_id === it.id || store.me.avatar_id === it.id;
       grid.append(h('div', { class: 'card shop-item' },
-        it.image_url ? h('img', { src: it.image_url, alt: '', loading: 'lazy' }) : h('div', { class: 'shop-ph' }, icon('star', 28)),
-        h('b', null, it.name_ar), h('small', { class: 'muted' }, it.type === 'frame' ? 'إطار' : it.type === 'title' ? 'لقب' : 'صورة'),
+        it.image_url ? h('img', { src: assetUrl(it.image_url), alt: '', loading: 'lazy', class: it.type === 'avatar' ? 'av' : '' }) : h('div', { class: 'shop-ph' }, icon('star', 28)),
+        h('b', null, it.name_ar), h('small', { class: 'muted' }, it.type === 'frame' ? 'إطار' : it.type === 'title' ? 'لقب' : 'شخصية'),
         mine
           ? h('button', { class: 'btn ' + (equipped ? 'ghost' : 'primary') + ' block', onClick: (e) => run(async () => {
               if (equipped) await rpc('unequip_slot', { p_type: it.type }); else await rpc('equip_item', { p_item: it.id });

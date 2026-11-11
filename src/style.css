@@ -47,8 +47,11 @@ a{color:inherit;text-decoration:none}
 .answers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.ans{font:inherit;font-weight:700;border:0;border-radius:14px;padding:14px 6px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;cursor:pointer}
 .ans.yes{background:#2E8B57}.ans.no{background:#C93B40}.ans.unsure{background:#4a5a74}.ans:disabled{opacity:.5}
 .player-card{aspect-ratio:562/793;width:100%;max-width:340px;margin:0 auto;border-radius:20px;background:linear-gradient(160deg,#16335c,#0A1628) center/cover no-repeat;border:2px solid var(--gold);position:relative;overflow:hidden}
-.pc-avatar{position:absolute;top:22%;inset-inline:0;display:grid;place-items:center;height:30%;color:var(--gold)}
-.pc-identity{position:absolute;top:56%;inset-inline:0;text-align:center}.pc-name{font-size:1.5rem;font-weight:900}
+.pc-avatar{position:absolute;top:15%;inset-inline:0;display:flex;align-items:flex-end;justify-content:center;height:40%;color:var(--gold)}
+.pc-identity{position:absolute;top:58%;inset-inline:0;text-align:center}.pc-name{font-size:1.5rem;font-weight:900}
 .pc-stats{position:absolute;bottom:8%;inset-inline:6%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
 .stat{display:flex;flex-direction:column}.stat b{font-size:1.2rem;color:var(--gold)}
 @media (max-width:360px){.modes{grid-template-columns:1fr}}
+
+.shop-item img.av{aspect-ratio:1;object-fit:contain;background:#1b2a44}
+.pc-avatar img{height:100%;width:auto;max-width:92%;object-fit:contain;display:block}
