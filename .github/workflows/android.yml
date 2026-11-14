@@ -30,20 +30,20 @@ jobs:
       - name: Notification icon + RTL
         run: node scripts/android-patch.mjs
 
-      # توقيع ثابت: ملف المفتاح محفوظ كسر باسم PLAYERIQ_KEYSTORE_B64 (Settings > Secrets > Actions)
+      # توقيع ثابت: السر PLAYERIQ_KEYSTORE_B64 إن وُجد، وإلا الملف signing/playeriq.keystore من الريبو
       - name: Install signing key
         id: sign
         env:
           KS: ${{ secrets.PLAYERIQ_KEYSTORE_B64 }}
         run: |
+          mkdir -p ~/.android
           if [ -n "$KS" ]; then
-            mkdir -p ~/.android
             echo "$KS" | base64 -d > ~/.android/debug.keystore
-            echo "signed=true" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::PLAYERIQ_KEYSTORE_B64 غير موجود: التوقيع عشوائي ولن يعمل كتحديث فوق النسخة السابقة"
-            echo "signed=false" >> "$GITHUB_OUTPUT"
+            cp signing/playeriq.keystore ~/.android/debug.keystore
           fi
+          keytool -list -keystore ~/.android/debug.keystore -storepass android | grep -i "SHA\|androiddebugkey"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
 
       - name: Bump version (so Android accepts it as an update)
         run: |
