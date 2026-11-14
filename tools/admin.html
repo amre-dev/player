@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>playerIQ — لوحة الأدمن</title>
+<style>
+:root{--bg:#0d1224;--card:#161d38;--line:#2a3560;--tx:#eef1ff;--mut:#94a0cf;--ac:#ffc83d;--ok:#3ddc97;--bad:#ff5d73}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,"Segoe UI",Tahoma,sans-serif;padding:16px}
+.w{max-width:640px;margin:0 auto}h1{font-size:20px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:#0d1430;color:var(--tx);font-size:15px;margin-bottom:8px}
+button{padding:10px 16px;border:0;border-radius:10px;background:var(--ac);color:#1a1400;font-weight:700;font-size:15px;cursor:pointer}
+button.g{background:#27315a;color:var(--tx)}button:disabled{opacity:.5}
+.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}.row button{flex:none}
+.u{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.u:hover,.u.sel{background:#1d2650;border-color:var(--line)}.u small{color:var(--mut);display:block;direction:ltr;text-align:right}
+.bal{color:var(--ac);font-weight:800}.msg{min-height:20px;font-size:14px;margin-top:6px}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>🛡️ لوحة الأدمن — playerIQ</h1>
+
+<div id="login" class="card">
+  <input id="em" type="email" placeholder="الإيميل" autocomplete="username" dir="ltr">
+  <input id="pw" type="password" placeholder="كلمة السر" autocomplete="current-password" dir="ltr">
+  <button id="go">دخول</button><div id="lmsg" class="msg"></div>
+</div>
+
+<div id="app" class="hide">
+  <div class="card row"><div id="me" style="flex:1"></div><button class="g" id="out">خروج</button></div>
+  <div class="card">
+    <input id="q" placeholder="ابحث باسم المستخدم أو الإيميل…">
+    <div id="list"></div>
+  </div>
+  <div class="card" id="grant">
+    <div id="who" style="margin-bottom:8px;color:var(--mut)">اختر مستخدمًا من القائمة</div>
+    <div class="row"><input id="amt" type="number" inputmode="numeric" placeholder="الكمية (سالب للخصم)" dir="ltr"><button id="do" disabled>تنفيذ</button></div>
+    <div class="row" style="margin-top:4px;flex-wrap:wrap">
+      <button class="g" data-a="50">+50</button><button class="g" data-a="100">+100</button><button class="g" data-a="500">+500</button><button class="g" data-a="1000">+1000</button>
+    </div>
+    <div id="gmsg" class="msg"></div>
+  </div>
+</div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+const sb = createClient('https://ihfymdwjjkwvkqjmfzjx.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloZnltZHdqamt3dmtxam1memp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1NTc0NjIsImV4cCI6MjEwOTEzMzQ2Mn0.rPhdXL4hPTipsfLdZGPwKNstS-odiITjnb1XAoaIPwE');
+const $=id=>document.getElementById(id); let sel=null, t;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function boot(){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){ $('login').classList.remove('hide'); $('app').classList.add('hide'); return; }
+  const {data:ok}=await sb.rpc('is_admin');
+  if(!ok){ $('lmsg').textContent='هذا الحساب ليس أدمن'; $('lmsg').className='msg bad'; await sb.auth.signOut(); return; }
+  $('login').classList.add('hide'); $('app').classList.remove('hide');
+  $('me').textContent=session.user.email; load('');
+}
+async function load(s){
+  const {data,error}=await sb.rpc('admin_list_users',{p_search:s});
+  if(error){ $('list').textContent=error.message; return; }
+  $('list').innerHTML=data.map(u=>'<div class="u'+(sel&&sel.id===u.id?' sel':'')+'" data-id="'+u.id+'"><div>'+esc(u.username)+'<small>'+esc(u.email)+'</small></div><div class="bal">'+u.coins_balance+' 🪙</div></div>').join('')||'لا نتائج';
+  $('list').querySelectorAll('.u').forEach(el=>el.onclick=()=>{ sel=data.find(x=>x.id===el.dataset.id); $('who').innerHTML='المستخدم: <b style="color:var(--tx)">'+esc(sel.username)+'</b> — رصيده '+sel.coins_balance; $('do').disabled=false; $('gmsg').textContent=''; load($('q').value); });
+}
+$('go').onclick=async()=>{ $('lmsg').textContent=''; const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value}); if(error){ $('lmsg').textContent=error.message; $('lmsg').className='msg bad'; return; } boot(); };
+$('out').onclick=async()=>{ await sb.auth.signOut(); sel=null; boot(); };
+$('q').oninput=()=>{ clearTimeout(t); t=setTimeout(()=>load($('q').value.trim()),300); };
+document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{ $('amt').value=b.dataset.a; });
+$('do').onclick=async()=>{
+  const a=parseInt($('amt').value,10); if(!sel||!a) return;
+  if(!confirm((a>0?'إضافة ':'خصم ')+Math.abs(a)+' عملة لـ '+sel.username+'؟')) return;
+  $('do').disabled=true; const {data,error}=await sb.rpc('admin_grant_coins',{p_user:sel.id,p_amount:a,p_note:null});
+  $('do').disabled=false;
+  if(error){ $('gmsg').textContent='فشل: '+error.message; $('gmsg').className='msg bad'; return; }
+  $('gmsg').textContent='تم ✓ الرصيد الجديد: '+data; $('gmsg').className='msg ok'; $('amt').value=''; sel.coins_balance=data; load($('q').value.trim());
+};
+boot();
+</script>
+</body>
+</html>
