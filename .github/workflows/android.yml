@@ -4,6 +4,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -27,9 +30,39 @@ jobs:
       - name: Notification icon + RTL
         run: node scripts/android-patch.mjs
 
+      # توقيع ثابت: ملف المفتاح محفوظ كسر باسم PLAYERIQ_KEYSTORE_B64 (Settings > Secrets > Actions)
+      - name: Install signing key
+        id: sign
+        env:
+          KS: ${{ secrets.PLAYERIQ_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KS" ]; then
+            mkdir -p ~/.android
+            echo "$KS" | base64 -d > ~/.android/debug.keystore
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::PLAYERIQ_KEYSTORE_B64 غير موجود: التوقيع عشوائي ولن يعمل كتحديث فوق النسخة السابقة"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bump version (so Android accepts it as an update)
+        run: |
+          sed -i "s/versionCode [0-9]*/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
+
+      - name: Publish release (stable download link)
+        if: steps.sign.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk PlayerIQ.apk
+          gh release delete latest -y --cleanup-tag || true
+          gh release create latest PlayerIQ.apk --title "PlayerIQ (latest)" --notes "Build #${{ github.run_number }} — ${{ github.sha }}"
 
       - uses: actions/upload-artifact@v4
         with:

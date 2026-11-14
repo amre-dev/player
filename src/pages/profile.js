@@ -16,13 +16,16 @@ export async function profilePage(root) {
   const frame = items.find(i => i.id === me.avatar_frame_id);
   const title = items.find(i => i.id === me.title_id);
   const avatar = items.find(i => i.id === me.avatar_id);
-  const stat = (n, l) => h('div', { class: 'stat' }, h('b', null, n), h('small', { class: 'muted' }, l));
+  const tile = (n, l, c) => h('div', { class: 'pc-tile ' + c }, h('b', null, n), h('span', null, l));
 
   root.replaceChildren(h('main', { class: 'page' },
     h('div', { class: 'player-card', style: frame?.image_url ? `background-image:url(${assetUrl(frame.image_url)})` : '' },
-      h('div', { class: 'pc-avatar' }, avatar?.image_url ? h('img', { src: assetUrl(avatar.image_url), alt: '' }) : icon('user', 56)),
-      h('div', { class: 'pc-identity' }, h('div', { class: 'pc-name' }, me.username), title ? h('div', { class: 'gold small' }, title.name_ar) : null),
-      h('div', { class: 'pc-stats' }, stat(hist.length, 'مباريات'), stat(wins, 'فوز'), stat(losses, 'خسارة'), stat(rate + '%', 'نسبة الفوز'))),
+      h('div', { class: 'pc-rate' }, h('b', null, rate + '%'), h('span', null, 'نسبة الفوز')),
+      h('div', { class: 'pc-glow' }),
+      h('div', { class: 'pc-medal' }, avatar?.image_url ? h('img', { src: assetUrl(avatar.image_url), alt: '' }) : icon('user', 56)),
+      h('div', { class: 'pc-name' }, me.username),
+      title ? h('div', { class: 'pc-title' }, h('span', null, title.name_ar)) : null,
+      h('div', { class: 'pc-stats' }, tile(hist.length, 'مباريات', ''), tile(wins, 'فوز', 'w'), tile(losses, 'خسارة', 'l'))),
     h('section', { class: 'card stack' }, h('h3', null, 'آخر المباريات'),
       hist.length ? hist.slice(0, 10).map(m => h('div', { class: 'row between' },
         h('span', null, m.mode === 'duel' ? 'مبارزة' : 'مزاد'),

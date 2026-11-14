@@ -46,12 +46,23 @@ a{color:inherit;text-decoration:none}
 .msg.g.ok{background:rgba(76,175,109,.2)}.msg.g.bad{background:rgba(229,72,77,.15)}
 .answers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.ans{font:inherit;font-weight:700;border:0;border-radius:14px;padding:14px 6px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:84px;cursor:pointer}
 .ans.yes{background:#2E8B57}.ans.no{background:#C93B40}.ans.unsure{background:#4a5a74}.ans:disabled{opacity:.5}
-.player-card{aspect-ratio:562/793;width:100%;max-width:340px;margin:0 auto;border-radius:20px;background:linear-gradient(160deg,#16335c,#0A1628) center/cover no-repeat;border:2px solid var(--gold);position:relative;overflow:hidden}
-.pc-avatar{position:absolute;top:15%;inset-inline:0;display:flex;align-items:flex-end;justify-content:center;height:40%;color:var(--gold)}
-.pc-identity{position:absolute;top:58%;inset-inline:0;text-align:center}.pc-name{font-size:1.5rem;font-weight:900}
-.pc-stats{position:absolute;bottom:8%;inset-inline:6%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
-.stat{display:flex;flex-direction:column}.stat b{font-size:1.2rem;color:var(--gold)}
+.player-card{aspect-ratio:562/793;width:100%;max-width:340px;margin:0 auto;border-radius:20px;background:linear-gradient(160deg,#16335c,#0A1628) center/cover no-repeat;border:2px solid var(--gold);position:relative;overflow:hidden;container-type:inline-size}
 @media (max-width:360px){.modes{grid-template-columns:1fr}}
 
 .shop-item img.av{aspect-ratio:1;object-fit:contain;background:#1b2a44}
-.pc-avatar img{height:100%;width:auto;max-width:92%;object-fit:contain;display:block}
+
+/* كرت اللاعب (تصميم جديد) — الأبعاد بنسبة عرض الكرت */
+.pc-rate{position:absolute;left:7.5%;top:4.5%;width:16%;display:flex;flex-direction:column;align-items:center;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+.pc-rate b{font-size:34px;font-size:9.5cqw;font-weight:900;color:var(--gold)}
+.pc-rate span{margin-top:3px;font-size:10px;font-size:2.6cqw;font-weight:700}
+.pc-glow{position:absolute;left:17.5%;top:9.9%;width:65%;aspect-ratio:1;border-radius:50%;box-shadow:0 0 34px rgba(242,183,5,.5)}
+.pc-medal{position:absolute;left:20%;top:10.3%;width:60%;aspect-ratio:1;border-radius:50%;border:4px solid var(--gold);box-sizing:border-box;overflow:hidden;background:radial-gradient(circle at 50% 30%,#3a4f78,#16233d);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+.pc-medal img{position:absolute;left:-4.2%;top:2.5%;width:105%;height:105%;object-fit:cover}
+.pc-name{position:absolute;left:0;right:0;top:54.6%;text-align:center;font-size:28px;font-size:8.5cqw;font-weight:900;line-height:1.15;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+.pc-title{position:absolute;left:0;right:0;top:62.8%;display:flex;justify-content:center}
+.pc-title span{padding:.3em 1.2em;border:1.5px solid var(--gold);border-radius:999px;background:rgba(242,183,5,.14);color:var(--gold);font-size:14px;font-size:4cqw;font-weight:700}
+.pc-stats{position:absolute;left:7%;right:7%;top:74.1%;box-sizing:border-box;padding:2.5cqw;display:grid;grid-template-columns:repeat(3,1fr);gap:2cqw;text-align:center;background:rgba(0,0,0,.3);border:1px solid rgba(242,183,5,.35);border-radius:18px}
+.pc-tile{display:flex;flex-direction:column;padding:2.5cqw 0;border-radius:12px;background:rgba(255,255,255,.08)}
+.pc-tile.w{background:rgba(76,175,109,.28)}.pc-tile.l{background:rgba(229,72,77,.28)}
+.pc-tile b{font-size:24px;font-size:7.5cqw;line-height:1.1;color:#fff}
+.pc-tile span{font-size:12px;font-size:3.5cqw;color:rgba(245,242,234,.75)}
